@@ -9,8 +9,6 @@ import { ThemeSwitch } from "@/components/theme-switch";
 import ChatBubble from "@/components/chat-bubble";
 import UserModal from "@/components/user-modal";
 
-const ws = new WebSocket("ws://localhost:3000/cable");
-
 type Message = {
   id: number;
   body: string;
@@ -21,25 +19,39 @@ export default function Home() {
   const [userName, setUserName] = useState<string>();
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState("");
-  const [wsOpen, setWsOpen] = useState(true);
+
+  const [socket, setSocket] = useState<WebSocket>();
 
   const messageRef = useRef<HTMLDivElement>(null);
 
-  ws.onopen = () => {
-    setWsOpen(true);
+  const handleConnectSocket = async () => {
+    const ws = new WebSocket("ws://localhost:3000/cable");
+
+    ws.onopen = () => {
+      console.log("Socket connected");
+    };
+
+    setSocket(ws);
   };
 
-  ws.onmessage = (e) => {
-    const data = JSON.parse(e.data);
+  useEffect(() => {
+    handleConnectSocket();
+  }, []);
 
-    if (data.type === "ping") return;
-    if (data.type === "welcome") return;
-    if (data.type === "confirm_subscription") return;
+  useEffect(() => {
+    if (!socket) return;
+    socket.onmessage = (e) => {
+      const data = JSON.parse(e.data);
 
-    const message = data.message;
+      if (data.type === "ping") return;
+      if (data.type === "welcome") return;
+      if (data.type === "confirm_subscription") return;
 
-    setMessagesAndScrollDown([...messages, message]);
-  };
+      const message = data.message;
+
+      setMessagesAndScrollDown([...messages, message]);
+    };
+  });
 
   const resetScroll = () => {
     const scrollableElement = messageRef.current;
@@ -83,9 +95,11 @@ export default function Home() {
   }, [messages]);
 
   const handleJoin = (value: string) => {
+    if (!socket) return;
+    console.log(socket);
     const guid = Math.random().toString(36).substring(2, 15);
 
-    ws.send(
+    socket.send(
       JSON.stringify({
         command: "subscribe",
         identifier: JSON.stringify({
@@ -152,7 +166,7 @@ export default function Home() {
           </>
         )}
       </div>
-      <UserModal wsOpen={wsOpen} onJoin={handleJoin} />
+      <UserModal wsOpen={!!socket} onJoin={handleJoin} />
     </section>
   );
 }
