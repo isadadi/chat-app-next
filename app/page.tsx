@@ -26,7 +26,7 @@ export default function Home() {
   const messageRef = useRef<HTMLDivElement>(null);
 
   const handleConnectSocket = async () => {
-    const ws = new WebSocket(`ws://${process.env.NEXT_PUBLIC_WS}/cable`);
+    const ws = new WebSocket(`wss://${process.env.NEXT_PUBLIC_WS}/cable`);
 
     ws.onopen = () => {
       console.log("Socket connected");
