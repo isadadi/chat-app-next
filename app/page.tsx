@@ -71,7 +71,7 @@ export default function Home() {
   };
 
   const fetchMessages = async () => {
-    const response = await fetch("http://localhost:3000/messages");
+    const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND}/messages`);
     const data = await response.json();
 
     setMessagesAndScrollDown(data);
@@ -80,7 +80,7 @@ export default function Home() {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    await fetch("http://localhost:3000/messages", {
+    await fetch(`${process.env.NEXT_PUBLIC_BACKEND}/messages`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
