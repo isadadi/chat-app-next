@@ -26,7 +26,7 @@ export default function Home() {
   const messageRef = useRef<HTMLDivElement>(null);
 
   const handleConnectSocket = async () => {
-    const ws = new WebSocket("ws://localhost:3000/cable");
+    const ws = new WebSocket(`ws://${process.env.NEXT_PUBLIC_WS}/cable`);
 
     ws.onopen = () => {
       console.log("Socket connected");
@@ -111,7 +111,7 @@ export default function Home() {
           id: guid,
           channel: "MessagesChannel",
         }),
-      })
+      }),
     );
 
     setUserName(value);
@@ -186,7 +186,7 @@ export default function Home() {
         id="messages"
       >
         {renderContent(
-          errorMessage ? "error" : !userName ? "loading" : "success"
+          errorMessage ? "error" : !userName ? "loading" : "success",
         )}
       </div>
       <UserModal wsOpen={!!socket} onJoin={handleJoin} />
