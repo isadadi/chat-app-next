@@ -21,17 +21,22 @@ export default function Home() {
   const [inputMessage, setInputMessage] = useState("");
 
   const [socket, setSocket] = useState<WebSocket>();
+  const [errorMessage, setErrorMessage] = useState("");
 
   const messageRef = useRef<HTMLDivElement>(null);
 
   const handleConnectSocket = async () => {
-    const ws = new WebSocket("ws://localhost:3000/cable");
+    const ws = new WebSocket(`ws://${process.env.NEXT_PUBLIC_WS}/cable`);
 
     ws.onopen = () => {
       console.log("Socket connected");
+      setSocket(ws);
     };
 
-    setSocket(ws);
+    ws.onerror = (e) => {
+      console.log("Socket error");
+      setErrorMessage("Application Errror");
+    };
   };
 
   useEffect(() => {
@@ -106,23 +111,29 @@ export default function Home() {
           id: guid,
           channel: "MessagesChannel",
         }),
-      })
+      }),
     );
 
     setUserName(value);
   };
 
-  return (
-    <section className="flex justify-center">
-      <div
-        className="bg-blue-200 dark:bg-slate-800 text-neutral-500 min-h-[100%-4rem] w-full md:w-1/3 pb-5 h-svh flex flex-col gap-3"
-        id="messages"
-      >
-        {!userName ? (
+  const renderContent = (state: "loading" | "error" | "success") => {
+    switch (state) {
+      case "loading":
+        return (
           <div className="flex items-center justify-center h-full">
             <Spinner />
           </div>
-        ) : (
+        );
+      case "error":
+        return (
+          <div className="flex items-center justify-center h-full">
+            {errorMessage}
+          </div>
+        );
+
+      case "success":
+        return (
           <>
             <div className="bg-blue-100 dark:bg-slate-700 h-20 py-4 flex items-center justify-between px-2">
               <p className="font-bold dark:text-neutral-50 text-neutral-600">
@@ -164,6 +175,18 @@ export default function Home() {
               </form>
             </div>
           </>
+        );
+    }
+  };
+
+  return (
+    <section className="flex justify-center">
+      <div
+        className="bg-blue-200 dark:bg-slate-800 text-neutral-500 min-h-[100%-4rem] w-full md:w-1/3 pb-5 h-svh flex flex-col gap-3"
+        id="messages"
+      >
+        {renderContent(
+          errorMessage ? "error" : !userName ? "loading" : "success",
         )}
       </div>
       <UserModal wsOpen={!!socket} onJoin={handleJoin} />
